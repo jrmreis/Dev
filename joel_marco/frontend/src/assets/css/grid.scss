@@ -1,0 +1,104 @@
+//$default-color: #1a2432;
+$default-color: #1d2939;
+$primary-color:#FFFFFF;
+$secondary-color: #868ba1;
+$input-color: #1a2432;
+$input-border-color: rgba(255,255,255,0.08);
+
+.e-emptyrow {
+  background-color: $input-color!important;
+  color: $primary-color!important;
+  border-color: $default-color!important;
+}
+.e-grid-icon, .e-groupheadercell {
+  background-color: rgb(23, 162, 184) !important;
+}
+
+.e-groupdroparea {
+  background-color: $input-color!important;
+  color: $primary-color!important;
+  border-color: $default-color!important;
+}
+.e-lib {
+  background-color: $input-color!important;
+  color: $primary-color!important;
+  border-color: $default-color!important;
+}
+.e-droppable {
+  background-color: $input-color!important;
+  color: $primary-color!important;
+  border-color: $default-color!important;
+}
+.e-draggable {
+  background-color: $input-color!important;
+  color: $primary-color!important;
+  border-color: $default-color!important;
+}
+.e-columnheader {
+  background-color: $default-color!important;
+  border-color: $default-color!important;
+}
+.e-headercell {
+  background-color: $default-color!important;
+  color: $secondary-color!important;
+  border-color: $default-color!important;
+}
+.e-filterbarcell {
+  background-color: $default-color!important;
+  border-width: 0!important;
+  border-radius: 0!important;
+}
+.e-filterdiv {
+  background-color: $input-color!important;
+  border-radius: 0!important;
+}
+.e-fltrinputdiv {
+  background-color: $input-color!important;
+  border-width: 0 0 1px 0!important;
+  border-color: $secondary-color!important;
+  border-radius: 0!important;
+}
+.e-filtertext {
+  background-color: $default-color!important;
+}
+.e-input {
+  background-color: $input-color!important;
+  color: $primary-color!important;
+  border-width: 0 0 1px 0!important;
+  border-color: $secondary-color!important;
+}
+.e-focus {
+  background-color: $input-color!important;
+  border-width: 0 0 1px 0;
+  border-color: $secondary-color;
+}
+.e-rowcell {
+  background-color: $default-color!important;
+  color: $secondary-color!important;
+  border-color: $secondary-color!important;
+}
+.e-pagercontainer {
+  background-color: $default-color!important;
+}
+.e-link,
+.e-numericitem,
+.e-spacing,
+.e-pager-default {
+  background-color: $default-color!important;
+  color: $primary-color!important;
+}
+
+.e-active {
+  background-color: #0866c6!important;
+  color: $primary-color!important;
+}
+.e-disable {
+  background-color: $secondary-color!important;
+  color: $primary-color!important;
+}
+.e-groupcaption, .e-indentcell, .e-emptycell, .e-grouptopleftcell, .e-lastgrouptopleftcell, .e-recordpluscollapse , .e-recordplusexpand{
+  background-color: $input-color!important;
+  color: $primary-color!important;
+  border-color: $input-color!important;
+}
+@import '../../../node_modules/@syncfusion/ej2-vue-grids/styles/bootstrap4.css';

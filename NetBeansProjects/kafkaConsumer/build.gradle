@@ -1,0 +1,16 @@
+apply plugin: 'java'
+apply plugin: 'jacoco'
+apply plugin: 'application'
+
+    group = 'br.com.thcs'
+
+mainClassName = 'br.com.thcs.kafkaConsumer.Main'
+
+repositories {https://mvnrepository.com/artifact/org.apache.kafka/kafka-clients
+    jcenter()
+}
+
+dependencies {compile group: 'org.apache.kafka', name: 'kafka-clients', version: '2.6.0'
+    testImplementation     'junit:junit:4.13'
+}
+

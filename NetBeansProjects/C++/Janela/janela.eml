@@ -1,0 +1,80 @@
+MIME-Version: 1.0
+Received: by 2002:a1c:9fc8:0:0:0:0:0 with HTTP; Fri, 22 Jun 2018 10:58:12
+ -0700 (PDT)
+Date: Fri, 22 Jun 2018 14:58:12 -0300
+Delivered-To: jrmreis@gmail.com
+Message-ID: <CAD9TKnVuWiyLwrYwPQD9vDcw-8krABBPNS_Pw4GJdVS65SJzqQ@mail.gmail.com>
+Subject: janela
+From: Joel Reis <jrmreis@gmail.com>
+To: Joel Reis <jrmreis@gmail.com>
+Content-Type: multipart/alternative; boundary="0000000000007a4ad9056f3ec68f"
+
+--0000000000007a4ad9056f3ec68f
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+#define pino_termistor A0
+#include <Thermistor.h>
+Thermistor temp(0);
+
+//Porta ligada ao pino IN1 do modulo
+int porta_rele1 =3D 7;
+
+void setup() {
+
+//Define pinos para o rele como saida
+pinMode(porta_rele1, OUTPUT);
+Serial.begin(9600);
+}
+void loop() {
+int temperature =3D temp.getTemp();
+Serial.print("Temperatura: ");
+Serial.print(temperature);
+Serial.println("=C2=B0C");
+delay(1000);
+
+  if ((temperature)  // controle on-off aquecimento
+  < 55){
+
+  digitalWrite(porta_rele1, LOW);  //Liga rele 1
+  Serial.println("Aquecimento Ligado");
+
+  ;}
+
+  else  {
+
+  digitalWrite(porta_rele1, HIGH);  //Desliga rele 1
+  ;}
+
+}
+
+
+--=20
+11-997992651
+Joel Reis
+
+--0000000000007a4ad9056f3ec68f
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr"><div>#define pino_termistor A0</div><div>#include &lt;Ther=
+mistor.h&gt;</div><div>Thermistor temp(0);=C2=A0</div><div><br></div><div>/=
+/Porta ligada ao pino IN1 do modulo</div><div>int porta_rele1 =3D 7;</div><=
+div><br></div><div>void setup() {</div><div><br></div><div>//Define pinos p=
+ara o rele como saida</div><div>pinMode(porta_rele1, OUTPUT);</div><div>Ser=
+ial.begin(9600);</div><div>}</div><div>void loop() {</div><div>int temperat=
+ure =3D temp.getTemp();</div><div>Serial.print(&quot;Temperatura: &quot;);<=
+/div><div>Serial.print(temperature);</div><div>Serial.println(&quot;=C2=B0C=
+&quot;);</div><div>delay(1000);</div><div><br></div><div>=C2=A0 if ((temper=
+ature)=C2=A0 // controle on-off aquecimento</div><div>=C2=A0 &lt; 55){</div=
+><div><br></div><div>=C2=A0 digitalWrite(porta_rele1, LOW);=C2=A0 //Liga re=
+le 1=C2=A0</div><div>=C2=A0 Serial.println(&quot;Aquecimento Ligado&quot;);=
+</div><div><br></div><div>=C2=A0 ;}</div><div><br></div><div>=C2=A0 else=C2=
+=A0 {=C2=A0</div><div><br></div><div>=C2=A0 digitalWrite(porta_rele1, HIGH)=
+;=C2=A0 //Desliga rele 1=C2=A0</div><div>=C2=A0 ;}</div><div><br></div><div=
+>}</div><div><br></div><div><br></div>-- <br><div class=3D"gmail_signature"=
+><div dir=3D"ltr"><div>11-997992651</div>
+<div>Joel Reis</div></div></div>
+</div>
+
+--0000000000007a4ad9056f3ec68f--

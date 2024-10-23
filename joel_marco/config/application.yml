@@ -1,0 +1,17 @@
+server:
+  port: 8081
+  address: 0.0.0.0
+spring:
+  datasource:
+    hikari:
+      minimum-idle: 0
+      initialization-fail-timeout: -1
+    url: 'jdbc:oracle:thin:@spark.cd5hejydecg5.sa-east-1.rds.amazonaws.com:1521/sparkdev'
+    username: 'thcsspark'
+    password: 'thcsadmin'
+    driver-class-name: oracle.jdbc.OracleDriver
+    continue-on-error: true
+  jpa:
+    hibernate:
+      ddl-auto: none
+    database: oracle

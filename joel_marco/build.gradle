@@ -1,0 +1,47 @@
+allprojects {
+    group = "br.com.thcs"
+    version = "0.1.1"
+}
+
+task npmInstall(type: Exec) {
+    workingDir "frontend/"
+    commandLine "npm", "ci"
+}
+
+task buildFrontend(type: Exec) {
+    dependsOn npmInstall
+    workingDir "frontend/"
+    commandLine "npm", "run", "build"
+}
+
+task copyStaticFiles(type: Copy) {
+    dependsOn buildFrontend
+    into "backend/src/main/resources/"
+    into("static") {
+        from "frontend/dist"
+    }
+    into("templates") {
+        from "frontend/dist/index.html"
+    }
+}
+
+task buildBackend(type: Exec) {
+    dependsOn copyStaticFiles
+    workingDir "backend/"
+    commandLine "./gradlew", "build"
+}
+
+task bundle (type: Copy) {
+    dependsOn buildBackend
+    from ("backend/build/libs/")
+    include "*.jar"
+    destinationDir file("./")
+    rename { String filename ->
+        filename = "spark.jar"
+    }
+}
+
+task runBackend(type: Exec) {
+    workingDir "backend/"
+    commandLine "./gradlew", "bootRun"
+}

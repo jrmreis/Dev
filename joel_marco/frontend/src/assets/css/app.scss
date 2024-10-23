@@ -1,0 +1,22 @@
+@import '../../../node_modules/@fortawesome/fontawesome-free/css/all.min.css';
+@import '../../../node_modules/bootstrap/dist/css/bootstrap.min.css';
+@import '../../../node_modules/@syncfusion/ej2-base/styles/bootstrap4.css';
+@import '../../../node_modules/@syncfusion/ej2-grids/styles/bootstrap4.css';
+@import '../../../node_modules/@syncfusion/ej2-vue-grids/styles/bootstrap4.css';
+@import 'bracket.min.css';
+@import 'bracket.dark.min.css';
+@import 'datepicker.scss';
+@import 'grid.scss';
+
+.label-font {
+  color: white;
+}
+.input-group-dark .form-control {
+  color: white!important;
+}
+.align-left {
+  text-align: left
+}
+.align-right {
+  text-align: right
+}

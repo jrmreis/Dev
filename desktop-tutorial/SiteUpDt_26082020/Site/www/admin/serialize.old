@@ -1,0 +1,165 @@
+/*
+	Slider
+
+$array[] = array(
+			'tipo' => 'text',
+			'campo' => 'titulo',
+			'titulo' => 'Título:',
+			'max' => '250'
+			);
+
+$array[] = array(
+			'tipo' => 'image',
+			'campo' => 'imagem',
+			'titulo' => 'Imagem:',
+			'help' => 'Extenções Permitidas: .jpg, .jpeg, .gif, .png<br>Tamanho Ideal: 1200x450 px'
+			);
+
+$array[] = array(
+			'tipo' => 'text',
+			'campo' => 'url',
+			'titulo' => 'URL:',
+			'max' => '250'
+			);
+
+$array[] = array(
+			'tipo' => 'select',
+			'campo' => 'target',
+			'titulo' => 'Target:',
+			'select' => array('_self' => 'Na mesma janela',
+							'_blank' => 'Nova aba')
+			);
+			
+$array[] = array(
+			'tipo' => 'boolean',
+			'campo' => 'ativo',
+			'titulo' => 'Ativo:'
+			);
+
+$array2[] = array('imagem', 'normal', '1200', '450', 'titulo');
+*/
+
+/*
+	SEO
+
+$array[] = array(
+			'tipo' => 'text',
+			'campo' => 'titulo',
+			'titulo' => 'SEO Título:',
+			'max' => '90',
+			'help' => 'Título exibido nas buscas do Google. Caso não seja preenchido, o sistema adiciona o Nome da Página + Nome da Empresa (Sobre - Nome da Empresa)'
+			);
+			
+$array[] = array(
+			'tipo' => 'text',
+			'campo' => 'description',
+			'titulo' => 'SEO Descrição:',
+			'max' => '150',
+			'help' => 'Descrição exibida nas buscas do Google.'
+			);
+*/
+
+/*
+
+	ADM MGA
+
+$array[] = array(
+			'tipo' => 'text',
+			'campo' => 'login',
+			'titulo' => 'Login:'
+			);
+			
+$array[] = array(
+			'tipo' => 'password',
+			'campo' => 'senha',
+			'titulo' => 'Senha:'
+			);
+			
+$array[] = array(
+			'tipo' => 'text',
+			'campo' => 'nome',
+			'titulo' => 'Nome:'
+			);
+			
+$array[] = array(
+			'tipo' => 'boolean',
+			'campo' => 'ativo',
+			'titulo' => 'Ativo:'
+			);
+*/
+
+/*
+Servicos
+
+$array[] = array(
+			'tipo' => 'text',
+			'campo' => 'title',
+			'titulo' => 'Título:',
+			'max' => '150'
+			);
+
+$array[] = array(
+			'tipo' => 'image',
+			'campo' => 'image',
+			'titulo' => 'Banner:',
+			'help' => 'Caso não seja definido uma imagem padrão será utilizada.<br>Tamanho Ideal: 1200x375 px'
+			);
+			
+$array[] = array(
+			'tipo' => 'boolean',
+			'campo' => 'active',
+			'titulo' => 'Ativo:'
+			);
+
+$array[] = array(
+			'tipo' => 'text',
+			'campo' => 'seo_title',
+			'titulo' => 'SEO Título:',
+			'max' => '90'
+			);
+
+$array[] = array(
+			'tipo' => 'text',
+			'campo' => 'seo_description',
+			'titulo' => 'SEO Descrição:',
+			'max' => '150'
+			);
+
+$array2[] = array('image', 'adaptive', '1200', '375', 'title');
+*/
+
+/*
+Serviçoo Conteudo
+
+	$array[] = array(
+				'tipo' => 'sql',
+				'campo' => 'service_id',
+				'titulo' => 'Serviços:',
+				'sql' => array('services', 'id', 'title', 'deleted = "0"', '', '', '')
+				);
+$array[] = array(
+			'tipo' => 'text',
+			'campo' => 'title',
+			'titulo' => 'Título:',
+			'max' => '150'
+			);
+
+$array[] = array(
+			'tipo' => 'ckeditor',
+			'campo' => 'text',
+			'titulo' => 'Texto:',
+			);
+			
+$array[] = array(
+			'tipo' => 'spinner',
+			'campo' => 'sequence',
+			'titulo' => 'Sequência de Exibição:',
+			'help' => 'Ordem decrescente'
+			);
+
+$array[] = array(
+			'tipo' => 'boolean',
+			'campo' => 'active',
+			'titulo' => 'Ativo:'
+			);
+*/

@@ -1,0 +1,13 @@
+Sitemap: https://www.updatedeng.com.br/sitemap.xml
+
+User-agent: Googlebot
+Allow: *
+
+User-agent: Bingbot
+Allow: *
+
+
+User-agent: *
+Disallow: /
+Disallow: /system/
+Disallow: /mga/
