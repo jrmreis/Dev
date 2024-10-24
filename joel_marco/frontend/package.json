@@ -22,7 +22,7 @@
     "jquery": "^3.5.1",
     "popper.js": "^1.16.1",
     "sweetalert2": "^9.15.1",
-    "vue": "^2.6.11",
+    "vue": "^3.0.0",
     "vue-chartjs": "^3.5.1",
     "vue-router": "^3.3.4",
     "vue2-datepicker": "^3.6.0",
