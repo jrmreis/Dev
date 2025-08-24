@@ -1,0 +1,273 @@
+# 🐳 Docker Compose - Sistema de Triagem Psicológica
+# Ambiente completo de desenvolvimento com serviços auxiliares
+
+version: '3.8'
+
+services:
+  # ==============================================================================
+  # 🧠 API Principal - Sistema de Triagem
+  # ==============================================================================
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: triagem-api
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - LOG_LEVEL=debug
+    env_file:
+      - .env
+    volumes:
+      # Hot reload para desenvolvimento
+      - ./src:/app/src:ro
+      - ./logs:/app/logs
+      # Cache node_modules para performance
+      - node_modules_cache:/app/node_modules
+    depends_on:
+      - redis
+      - nginx
+    networks:
+      - triagem-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.api.rule=Host(`api.triagem.local`)"
+      - "traefik.http.services.api.loadbalancer.server.port=3000"
+
+  # ==============================================================================
+  # 📦 Redis - Cache e Sessions
+  # ==============================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: triagem-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+      - ./config/redis.conf:/usr/local/etc/redis/redis.conf:ro
+    command: redis-server /usr/local/etc/redis/redis.conf
+    networks:
+      - triagem-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+    sysctls:
+      net.core.somaxconn: 1024
+
+  # ==============================================================================
+  # 🌐 Nginx - Reverse Proxy & Load Balancer
+  # ==============================================================================
+  nginx:
+    image: nginx:alpine
+    container_name: triagem-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./config/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./config/nginx/sites:/etc/nginx/conf.d:ro
+      - ./ssl:/etc/nginx/ssl:ro
+      - nginx_logs:/var/log/nginx
+    depends_on:
+      - api
+    networks:
+      - triagem-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+  # ==============================================================================
+  # 📊 Prometheus - Métricas
+  # ==============================================================================
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: triagem-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - triagem-network
+
+  # ==============================================================================
+  # 📈 Grafana - Dashboard de Métricas
+  # ==============================================================================
+  grafana:
+    image: grafana/grafana:latest
+    container_name: triagem-grafana
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./config/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./config/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    depends_on:
+      - prometheus
+    networks:
+      - triagem-network
+
+  # ==============================================================================
+  # 📝 Loki - Agregação de Logs
+  # ==============================================================================
+  loki:
+    image: grafana/loki:latest
+    container_name: triagem-loki
+    restart: unless-stopped
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./config/loki.yaml:/etc/loki/local-config.yaml:ro
+      - loki_data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - triagem-network
+
+  # ==============================================================================
+  # 🚚 Promtail - Coleta de Logs
+  # ==============================================================================
+  promtail:
+    image: grafana/promtail:latest
+    container_name: triagem-promtail
+    restart: unless-stopped
+    volumes:
+      - ./config/promtail.yaml:/etc/promtail/config.yml:ro
+      - ./logs:/var/log/app:ro
+      - nginx_logs:/var/log/nginx:ro
+      - /var/log:/var/log/system:ro
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
+    networks:
+      - triagem-network
+
+  # ==============================================================================
+  # 🧪 Testes E2E (opcional)
+  # ==============================================================================
+  e2e-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    container_name: triagem-e2e
+    profiles:
+      - testing
+    environment:
+      - API_BASE_URL=http://api:3000
+      - REDIS_URL=redis://redis:6379
+    volumes:
+      - ./tests:/app/tests:ro
+      - ./reports:/app/reports
+    depends_on:
+      - api
+      - redis
+    networks:
+      - triagem-network
+    command: npm run test:e2e
+
+  # ==============================================================================
+  # 🔄 Watchtower - Auto-update containers (produção)
+  # ==============================================================================
+  watchtower:
+    image: containrrr/watchtower
+    container_name: triagem-watchtower
+    profiles:
+      - production
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_POLL_INTERVAL=300
+      - WATCHTOWER_INCLUDE_STOPPED=true
+    command: --interval 300 --cleanup
+
+# ==============================================================================
+# 🌐 Networks
+# ==============================================================================
+networks:
+  triagem-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+# ==============================================================================
+# 💾 Volumes Persistentes
+# ==============================================================================
+volumes:
+  # Cache de node_modules para desenvolvimento
+  node_modules_cache:
+    driver: local
+
+  # Dados do Redis
+  redis_data:
+    driver: local
+
+  # Logs do Nginx
+  nginx_logs:
+    driver: local
+
+  # Dados do Prometheus
+  prometheus_data:
+    driver: local
+
+  # Dados do Grafana
+  grafana_data:
+    driver: local
+
+  # Dados do Loki
+  loki_data:
+    driver: local
+
+# ==============================================================================
+# 🏷️ Labels Globais
+# ==============================================================================
+x-labels: &default-labels
+  project: "triagem-psicologica"
+  environment: "development"
+  maintainer: "triagem-team"
+  
+# ==============================================================================
+# 📋 Configurações Compartilhadas
+# ==============================================================================
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+x-deploy: &default-deploy
+  resources:
+    limits:
+      memory: 512M
+    reservations:
+      memory: 256M

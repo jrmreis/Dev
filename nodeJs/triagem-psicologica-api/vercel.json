@@ -1,0 +1,136 @@
+{
+  "version": 2,
+  "name": "triagem-psicologica-api",
+  "description": "Sistema de Triagem Psicológica - API Node.js + Notion",
+  "framework": null,
+  "public": false,
+  
+  "functions": {
+    "src/server.js": {
+      "maxDuration": 30
+    }
+  },
+
+  "builds": [
+    {
+      "src": "src/server.js",
+      "use": "@vercel/node",
+      "config": {
+        "maxLambdaSize": "50mb",
+        "runtime": "nodejs18.x"
+      }
+    }
+  ],
+
+  "routes": [
+    {
+      "src": "/health/(.*)",
+      "dest": "/src/server.js"
+    },
+    {
+      "src": "/api/v1/(.*)",
+      "dest": "/src/server.js"
+    },
+    {
+      "src": "/",
+      "dest": "/src/server.js"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/src/server.js"
+    }
+  ],
+
+  "env": {
+    "NODE_ENV": "production",
+    "LOG_LEVEL": "info"
+  },
+
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "geolocation=(), microphone=(), camera=()"
+        }
+      ]
+    },
+    {
+      "source": "/health/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
+    }
+  ],
+
+  "redirects": [
+    {
+      "source": "/docs",
+      "destination": "/api/v1/docs",
+      "permanent": false
+    },
+    {
+      "source": "/status",
+      "destination": "/health",
+      "permanent": false
+    }
+  ],
+
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/v1/$1"
+    }
+  ],
+
+  "regions": ["gru1", "iad1"],
+
+  "github": {
+    "autoAlias": false,
+    "enabled": true,
+    "autoJobCancelation": true
+  },
+
+  "cleanUrls": true,
+  "trailingSlash": false,
+
+  "buildCommand": "npm run build:vercel",
+  "installCommand": "npm install --production=false",
+  "outputDirectory": ".",
+
+  "ignoreCommand": "git diff --quiet HEAD^ HEAD ./src",
+
+  "crons": [
+    {
+      "path": "/api/v1/maintenance/cleanup",
+      "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/v1/analytics/daily-report",
+      "schedule": "0 6 * * *"
+    }
+  ]
+}

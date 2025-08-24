@@ -1,0 +1,23 @@
+{
+  "timestamp": "2025-08-14T21:16:25.664453",
+  "pontuacoes": {
+    "Mentiras_Compulsivas": 71.42857142857143,
+    "Fantasias_Elaboradas": 82.85714285714286,
+    "Busca_Atencao": 77.14285714285715,
+    "Manipulacao_Interpessoal": 65.71428571428571,
+    "Confusao_Realidade": 71.42857142857143,
+    "Necessidade_Admiracao": 82.85714285714286,
+    "Impacto_Relacionamentos": 71.42857142857143,
+    "Comportamento_Teatral": 74.28571428571429,
+    "Pontuacao_Geral_Mitomania": 74.34285714285714
+  },
+  "tipo_avaliacao": "Ferramenta de Triagem para Mitomania - Brasil",
+  "versao": "1.0",
+  "disclaimer": "Esta é uma ferramenta de triagem, não um instrumento diagnóstico. Procure ajuda profissional para avaliação completa.",
+  "recursos_apoio_brasil": {
+    "conselho_federal_psicologia": "https://site.cfp.org.br",
+    "cvv": "188",
+    "caps_info": "Procure o CAPS da sua região",
+    "clinicas_universitarias": "Universidades oferecem atendimento psicológico"
+  }
+}

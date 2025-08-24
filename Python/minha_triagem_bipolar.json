@@ -1,0 +1,23 @@
+{
+  "timestamp": "2025-08-14T18:22:11.218720",
+  "pontuacoes": {
+    "Episodios_Maniacos": 77.14285714285715,
+    "Episodios_Depressivos": 82.85714285714286,
+    "Episodios_Mistos": 73.33333333333333,
+    "Prejuizo_Funcional": 70.0,
+    "Historia_Familiar": 64.0,
+    "Uso_Substancias": 76.0,
+    "Padroes_Sono": 72.0,
+    "Caracteristicas_Psicoticas": 84.0,
+    "Risco_Geral": 75.84
+  },
+  "tipo_avaliacao": "Ferramenta de Triagem para Transtorno Bipolar - Brasil",
+  "versao": "1.0",
+  "disclaimer": "Esta é uma ferramenta de triagem, não um instrumento diagnóstico. Procure ajuda profissional para diagnóstico.",
+  "recursos_crise_brasil": {
+    "cvv": "188",
+    "chat_cvv": "https://www.cvv.org.br",
+    "samu": "192",
+    "bombeiros": "193"
+  }
+}

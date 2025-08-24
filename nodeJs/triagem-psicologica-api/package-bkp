@@ -1,0 +1,60 @@
+{
+  "name": "triagem-psicologica-api",
+  "version": "1.0.0",
+  "description": "Sistema de triagem psicológica com integração ao Notion - Transtorno Bipolar, Narcisismo e Mitomania",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix"
+  },
+  "keywords": [
+    "psicologia",
+    "triagem",
+    "saude-mental",
+    "notion",
+    "api",
+    "nodejs",
+    "express"
+  ],
+  "author": "Sistema de Triagem Psicológica",
+  "license": "MIT",
+  "dependencies": {
+    "@notionhq/client": "^2.2.15",
+    "express": "^4.18.2",
+    "express-rate-limit": "^7.1.5",
+    "helmet": "^7.1.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "zod": "^3.22.4",
+    "crypto": "^1.0.1",
+    "winston": "^3.11.0",
+    "compression": "^1.7.4",
+    "express-slow-down": "^2.0.1",
+    "uuid": "^9.0.1",
+    "moment": "^2.29.4",
+    "joi": "^17.11.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2",
+    "jest": "^29.7.0",
+    "supertest": "^6.3.3",
+    "eslint": "^8.55.0",
+    "@types/jest": "^29.5.8"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/usuario/triagem-psicologica-api.git"
+  },
+  "bugs": {
+    "url": "https://github.com/usuario/triagem-psicologica-api/issues"
+  },
+  "homepage": "https://github.com/usuario/triagem-psicologica-api#readme"
+}

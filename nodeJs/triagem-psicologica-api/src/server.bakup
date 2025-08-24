@@ -1,0 +1,87 @@
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const helmet = require('helmet');
+const logger = require('./utils/logger');
+const notionService = require('./services/notionService');
+const triagemRoutes = require('./routes/triagem');
+const analyticsRoutes = require('./routes/analytics');
+const healthRoutes = require('./routes/health');
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Basic middleware
+app.use(helmet());
+app.use(cors());
+app.use(express.json());
+
+// Request logging
+app.use((req, res, next) => {
+  logger.info(`${req.method} ${req.url}`);
+  next();
+});
+
+// Routes
+app.use('/api/v1/triagem', triagemRoutes);
+app.use('/api/v1/analytics', analyticsRoutes);
+app.use('/api/v1/health', healthRoutes);
+
+// Basic routes
+app.get('/', (req, res) => {
+  res.json({
+    message: 'Sistema de Triagem Psicológica - API',
+    status: 'online',
+    version: '1.0.0',
+    timestamp: new Date().toISOString(),
+    endpoints: {
+      health: '/health',
+      triagem_bipolar: '/api/v1/triagem/bipolar/iniciar',
+      triagem_depression: '/api/v1/triagem/depression/iniciar',
+      triagem_anxiety: '/api/v1/triagem/anxiety/iniciar',
+      triagem_adhd: '/api/v1/triagem/adhd/iniciar',
+      triagem_narcisismo: '/api/v1/triagem/narcisismo/iniciar',
+      triagem_mitomania: '/api/v1/triagem/mitomania/iniciar'
+    }
+  });
+});
+
+app.get('/health', async (req, res) => {
+  try {
+    const notionHealthy = await notionService.testConnection();
+    
+    res.json({
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      environment: process.env.NODE_ENV || 'development',
+      services: {
+        notion: notionHealthy ? 'healthy' : 'unhealthy'
+      },
+      databases: {
+        bipolar: !!process.env.NOTION_DATABASE_BIPOLAR,
+        depression: !!process.env.NOTION_DATABASE_DEPRESSION,
+        anxiety: !!process.env.NOTION_DATABASE_ANXIETY,
+        adhd: !!process.env.NOTION_DATABASE_ADHD,
+        narcisismo: !!process.env.NOTION_DATABASE_NARCISISMO,
+        mitomania: !!process.env.NOTION_DATABASE_MITOMANIA
+      }
+    });
+  } catch (error) {
+    logger.error('Health check failed:', error.message);
+    res.status(503).json({
+      status: 'unhealthy',
+      timestamp: new Date().toISOString(),
+      error: 'Service unavailable'
+    });
+  }
+});
+
+// Start server
+app.listen(PORT, () => {
+  logger.info(`Server started on port ${PORT}`);
+  logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  logger.info(`Health check: http://localhost:${PORT}/health`);
+});
+
+module.exports = app;

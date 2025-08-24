@@ -1,0 +1,371 @@
+// server.js - Sistema de Triagem Psicológica Científica
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const bodyParser = require('body-parser');
+const { Client } = require('@notionhq/client');
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Inicializar cliente Notion (se configurado)
+let notion = null;
+if (process.env.NOTION_TOKEN && process.env.NOTION_DATABASE_ID) {
+  notion = new Client({
+    auth: process.env.NOTION_TOKEN,
+  });
+  console.log('✅ Notion client configurado');
+} else {
+  console.warn('⚠️  Notion não configurado - verifique .env');
+}
+
+// Middleware
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+  credentials: true
+}));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+// Middleware de log
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+  next();
+});
+
+// Rota de health check
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    version: '2.0.0',
+    message: 'Sistema de Triagem Psicológica Científica',
+    features: [
+      'scientific-questions', 
+      'notion-integration', 
+      'advanced-scoring',
+      'gad-7',
+      'phq-9', 
+      'asrs-1.1',
+      'mdq',
+      'npi-40'
+    ],
+    environment: process.env.NODE_ENV || 'development',
+    notion_configured: !!notion,
+    endpoints: [
+      'GET /health',
+      'GET /api/test',
+      'POST /api/iniciar',
+      'GET /api/analytics'
+    ]
+  });
+});
+
+// Rota de teste da API
+app.get('/api/test', (req, res) => {
+  res.json({
+    success: true,
+    message: 'API funcionando corretamente! 🚀',
+    data: {
+      screeningTypes: {
+        anxiety: 'Transtorno de Ansiedade (GAD-7 + BAI)',
+        depression: 'Transtorno Depressivo (PHQ-9 + BDI-II)',
+        adhd: 'TDAH (ASRS-1.1 + DSM-5)',
+        bipolar: 'Transtorno Bipolar (MDQ + HCL-32)',
+        narcisismo: 'Traços Narcisistas (NPI-40)',
+        mitomania: 'Tendências à Mitomania'
+      },
+      totalQuestions: {
+        anxiety: 45,
+        depression: 42,
+        adhd: 40,
+        bipolar: 35,
+        narcisismo: 40,
+        mitomania: 35
+      },
+      scientificBasis: [
+        'GAD-7 (Generalized Anxiety Disorder 7-item)',
+        'PHQ-9 (Patient Health Questionnaire-9)',
+        'ASRS-1.1 (Adult ADHD Self-Report Scale)',
+        'MDQ (Mood Disorder Questionnaire)',
+        'NPI-40 (Narcissistic Personality Inventory)'
+      ]
+    }
+  });
+});
+
+// Rota para iniciar triagem
+app.post('/api/iniciar', async (req, res) => {
+  try {
+    const { tipo_triagem } = req.body;
+    
+    if (!tipo_triagem) {
+      return res.status(400).json({
+        success: false,
+        error: 'tipo_triagem é obrigatório',
+        validTypes: ['anxiety', 'depression', 'adhd', 'bipolar', 'narcisismo', 'mitomania']
+      });
+    }
+
+    const validTypes = ['anxiety', 'depression', 'adhd', 'bipolar', 'narcisismo', 'mitomania'];
+    if (!validTypes.includes(tipo_triagem)) {
+      return res.status(400).json({
+        success: false,
+        error: `Tipo de triagem inválido. Tipos válidos: ${validTypes.join(', ')}`
+      });
+    }
+
+    const sessionId = `${tipo_triagem.toUpperCase().slice(0, 2)}-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
+    
+    const questionCounts = {
+      anxiety: 45,
+      depression: 42,
+      adhd: 40,
+      bipolar: 35,
+      narcisismo: 40,
+      mitomania: 35
+    };
+
+    const scientificBasis = {
+      anxiety: 'GAD-7 + Beck Anxiety Inventory + DSM-5 Criteria',
+      depression: 'PHQ-9 + Beck Depression Inventory-II + DSM-5 Criteria',
+      adhd: 'ASRS-1.1 WHO + DSM-5 ADHD Criteria',
+      bipolar: 'Mood Disorder Questionnaire + HCL-32',
+      narcisismo: 'Narcissistic Personality Inventory-40 (NPI-40)',
+      mitomania: 'Pathological Lying Research (Dike et al., 2005)'
+    };
+
+    // Se Notion estiver configurado, criar sessão no banco
+    let notionPageId = null;
+    if (notion) {
+      try {
+        const newPage = await notion.pages.create({
+          parent: { database_id: process.env.NOTION_DATABASE_ID },
+          properties: {
+            'ID_Sessao': {
+              title: [{ text: { content: sessionId } }]
+            },
+            'Tipo_Triagem': {
+              select: { name: tipo_triagem }
+            },
+            'Data_Inicio': {
+              date: { start: new Date().toISOString() }
+            },
+            'Status_Sessao': {
+              select: { name: 'Iniciada' }
+            },
+            'Total_Perguntas': {
+              number: questionCounts[tipo_triagem]
+            },
+            'Tempo_Estimado': {
+              number: Math.ceil(questionCounts[tipo_triagem] * 0.4)
+            },
+            'Base_Cientifica': {
+              rich_text: [{ text: { content: scientificBasis[tipo_triagem] } }]
+            }
+          }
+        });
+        notionPageId = newPage.id;
+        console.log(`✅ Sessão ${sessionId} criada no Notion`);
+      } catch (notionError) {
+        console.error('❌ Erro ao criar sessão no Notion:', notionError.message);
+        // Continuar sem Notion se der erro
+      }
+    }
+
+    res.json({
+      success: true,
+      data: {
+        sessionId,
+        tipo_triagem,
+        totalQuestions: questionCounts[tipo_triagem],
+        estimatedTime: Math.ceil(questionCounts[tipo_triagem] * 0.4),
+        scientificBasis: scientificBasis[tipo_triagem],
+        notionPageId,
+        message: `Sessão ${sessionId} iniciada para ${tipo_triagem}`,
+        timestamp: new Date().toISOString()
+      }
+    });
+  } catch (error) {
+    console.error('❌ Erro ao iniciar sessão:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// Analytics básico
+app.get('/api/analytics', (req, res) => {
+  res.json({
+    success: true,
+    data: {
+      system_info: {
+        version: '2.0.0',
+        uptime: process.uptime(),
+        memory: process.memoryUsage(),
+        node_version: process.version
+      },
+      screening_types: 6,
+      total_questions: 237,
+      scientific_instruments: [
+        'GAD-7', 'Beck Anxiety Inventory', 
+        'PHQ-9', 'BDI-II',
+        'ASRS-1.1', 'MDQ', 'HCL-32', 'NPI-40'
+      ],
+      features: [
+        'Scientific Question Sets',
+        'Notion Integration', 
+        'Advanced Scoring',
+        'Subscale Analysis',
+        'Risk Assessment',
+        'Professional Recommendations'
+      ]
+    }
+  });
+});
+
+// Rota para executar teste de permissões (mantendo funcionalidade existente)
+app.get('/test-permissions', (req, res) => {
+  try {
+    // Executar o teste de permissões existente
+    require('./test-permissions.js');
+    res.json({
+      success: true,
+      message: 'Teste de permissões executado - verifique console'
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// Middleware de tratamento de erro
+app.use((error, req, res, next) => {
+  console.error('❌ Erro não tratado:', error);
+  res.status(500).json({
+    success: false,
+    error: 'Erro interno do servidor',
+    message: process.env.NODE_ENV === 'development' ? error.message : 'Algo deu errado',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Handler 404
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    error: 'Endpoint não encontrado',
+    requested_path: req.path,
+    available_endpoints: [
+      'GET /health',
+      'GET /api/test',
+      'POST /api/iniciar',
+      'GET /api/analytics',
+      'GET /test-permissions'
+    ],
+    documentation: 'https://github.com/your-repo/triagem-psicologica-api'
+  });
+});
+
+// Iniciar servidor
+app.listen(PORT, () => {
+  console.log('🚀=================================🚀');
+  console.log(`   Sistema de Triagem Psicológica`);
+  console.log(`   Versão: 2.0.0 - Científica`);
+  console.log('🚀=================================🚀');
+  console.log(`📊 Servidor rodando na porta: ${PORT}`);
+  console.log(`🌐 URL: http://localhost:${PORT}`);
+  console.log(`💚 Health: http://localhost:${PORT}/health`);
+  console.log(`🧪 Teste: http://localhost:${PORT}/api/test`);
+  console.log('');
+  console.log('🔬 Instrumentos Científicos Disponíveis:');
+  console.log('   • GAD-7 (Ansiedade Generalizada)');
+  console.log('   • PHQ-9 (Depressão)');
+  console.log('   • ASRS-1.1 (TDAH)');
+  console.log('   • MDQ (Transtorno Bipolar)');
+  console.log('   • NPI-40 (Narcisismo)');
+  console.log('   • Mitomania Assessment');
+  console.log('');
+  
+  // Verificar configurações
+  if (!process.env.NOTION_TOKEN) {
+    console.log('⚠️  AVISO: NOTION_TOKEN não configurado');
+    console.log('   📝 Edite o arquivo .env para habilitar Notion');
+  } else {
+    console.log('✅ Notion configurado');
+  }
+  
+  if (!process.env.NOTION_DATABASE_ID) {
+    console.log('⚠️  AVISO: NOTION_DATABASE_ID não configurado');
+  }
+  
+  console.log('🚀=================================🚀');
+});
+
+module.exports = app;
+
+// Importar questões científicas
+const { CompleteScientificQuestionSets } = require('./services/question-sets');
+
+// Serviço de questões científicas
+class ScientificQuestionService {
+  constructor() {
+    this.questionSets = new Map();
+    this.initializeQuestionSets();
+  }
+
+  initializeQuestionSets() {
+    this.questionSets.set('anxiety', CompleteScientificQuestionSets.createAnxietyQuestionSet());
+    this.questionSets.set('depression', CompleteScientificQuestionSets.createDepressionQuestionSet());
+    this.questionSets.set('adhd', CompleteScientificQuestionSets.createADHDQuestionSet());
+    this.questionSets.set('bipolar', CompleteScientificQuestionSets.createBipolarQuestionSet());
+    this.questionSets.set('narcisismo', CompleteScientificQuestionSets.createNarcissismQuestionSet());
+    this.questionSets.set('mitomania', CompleteScientificQuestionSets.createMythomaniaQuestionSet());
+  }
+
+  getQuestions(screeningType) {
+    const questionSet = this.questionSets.get(screeningType);
+    if (!questionSet) {
+      throw new Error(`Question set not found for screening type: ${screeningType}`);
+    }
+    return {
+      questions: questionSet.questions.map(q => ({
+        id: q.id,
+        text: q.text,
+        category: q.category
+      })),
+      metadata: {
+        totalQuestions: questionSet.totalQuestions,
+        estimatedTime: questionSet.estimatedTime,
+        scientificBasis: questionSet.scientificBasis,
+        description: questionSet.description
+      }
+    };
+  }
+}
+
+const questionService = new ScientificQuestionService();
+
+// Nova rota para obter questões científicas
+app.get('/api/questions/:screeningType', async (req, res) => {
+  try {
+    const { screeningType } = req.params;
+    console.log(`Fetching scientific questions for: ${screeningType}`);
+    
+    const questionData = questionService.getQuestions(screeningType);
+    
+    res.json({
+      success: true,
+      data: questionData
+    });
+  } catch (error) {
+    console.error('Error fetching questions:', error);
+    res.status(400).json({
+      success: false,
+      error: error.message
+    });
+  }
+});

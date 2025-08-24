@@ -1,0 +1,42 @@
+{
+  "name": "triagem-psicologica-api",
+  "version": "2.0.0",
+  "description": "API para sistema de triagem psicológica com integração Notion",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "debug-notion": "node debug-notion.js",
+    "test-notion": "curl http://localhost:3000/api/test-notion",
+    "build": "echo 'No build needed for pure JS'",
+    "lint": "echo 'Linting not configured'",
+    "check": "node --check server.js && node --check debug-notion.js"
+  },
+  "dependencies": {
+    "@notionhq/client": "^2.3.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^4.21.2",
+    "express-rate-limit": "^6.10.0",
+    "helmet": "^7.0.0",
+    "morgan": "^1.10.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "keywords": [
+    "notion",
+    "api",
+    "triagem",
+    "psicologia",
+    "health",
+    "mental-health"
+  ],
+  "author": "Joel",
+  "license": "MIT",
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  }
+}

@@ -1,0 +1,157 @@
+import express from 'express';
+import cors from 'cors';
+import { Client } from '@notionhq/client';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Configurar CORS
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || 'http://localhost:3001',
+  credentials: true
+}));
+
+app.use(express.json({ limit: '10mb' }));
+
+// Verificar variáveis de ambiente
+if (!process.env.NOTION_API_SECRET) {
+  console.error('❌ NOTION_API_SECRET não configurado no .env');
+  console.error('📝 Configure sua integração Notion em: https://www.notion.so/my-integrations');
+  process.exit(1);
+}
+
+if (!process.env.NOTION_DATABASE_ID) {
+  console.error('❌ NOTION_DATABASE_ID não configurado no .env');
+  console.error('📝 Obtenha o ID da sua database Notion');
+  process.exit(1);
+}
+
+// Inicializar cliente Notion
+const notion = new Client({
+  auth: process.env.NOTION_API_SECRET,
+});
+
+console.log('✅ Configuração carregada:');
+console.log(`   🔑 API Secret: ${process.env.NOTION_API_SECRET.substring(0, 20)}...`);
+console.log(`   🗄️ Database ID: ${process.env.NOTION_DATABASE_ID.substring(0, 8)}...`);
+
+// Rota de health check
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
+// Rota para testar conexão com Notion
+app.get('/api/test-notion', async (req, res) => {
+  try {
+    const response = await notion.databases.retrieve({
+      //database_id: process.env.NOTION_DATABASE_ID,
+      const notionService = require('./src/services/notionService');
+// Then use the service methods instead of direct API calls
+    });
+    
+    res.json({
+      success: true,
+      message: 'Conexão com Notion funcionando!',
+      database: {
+        title: response.title[0]?.plain_text || 'Sem título',
+        id: response.id,
+        properties: Object.keys(response.properties)
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      code: error.code
+    });
+  }
+});
+
+// Rota para salvar triagem
+app.post('/api/triagem', async (req, res) => {
+  try {
+    const { result, sessionId } = req.body;
+    
+    if (!result || !sessionId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Dados insuficientes. result e sessionId são obrigatórios.'
+      });
+    }
+
+    const notionData = {
+      parent: { 
+        database_id: process.env.NOTION_DATABASE_ID 
+      },
+      properties: {
+        'Título': {
+          title: [
+            {
+              text: {
+                content: `Triagem ${result.screeningType} - ${sessionId}`
+              }
+            }
+          ]
+        },
+        'Tipo de Triagem': {
+          select: {
+            name: result.screeningType
+          }
+        },
+        'Pontuação': {
+          number: result.interpretation?.score || 0
+        },
+        'Nível de Risco': {
+          select: {
+            name: result.interpretation?.riskLevel || 'Não definido'
+          }
+        },
+        'Data': {
+          date: {
+            start: new Date().toISOString().split('T')[0]
+          }
+        },
+        'Session ID': {
+          rich_text: [
+            {
+              text: {
+                content: sessionId
+              }
+            }
+          ]
+        }
+      }
+    };
+
+    const response = await notion.pages.create(notionData);
+
+    res.json({
+      success: true,
+      message: 'Resultado salvo no Notion com sucesso!',
+      notionPageId: response.id,
+      url: response.url
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      code: error.code
+    });
+  }
+});
+
+// Iniciar servidor
+app.listen(PORT, () => {
+  console.log('🚀 Servidor iniciado com sucesso!');
+  console.log(`   📡 Porta: ${PORT}`);
+  console.log(`   🌐 API: http://localhost:${PORT}`);
+  console.log(`   🧪 Teste: http://localhost:${PORT}/api/test-notion`);
+});

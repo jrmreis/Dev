@@ -1,0 +1,12 @@
+{
+  "timestamp": "2025-08-14T06:37:39.716594",
+  "scores": {
+    "Openness": 65.0,
+    "Conscientiousness": 77.5,
+    "Extraversion": 57.49999999999999,
+    "Agreeableness": 75.0,
+    "Neuroticism": 60.0
+  },
+  "assessment_type": "Big Five Personality Assessment",
+  "version": "1.0"
+}

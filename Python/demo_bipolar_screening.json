@@ -1,0 +1,22 @@
+{
+  "timestamp": "2025-08-14T15:09:39.995120",
+  "scores": {
+    "Manic_Episodes": 65,
+    "Depressive_Episodes": 75,
+    "Mixed_Episodes": 55,
+    "Functional_Impairment": 70,
+    "Family_History": 40,
+    "Substance_Use": 35,
+    "Sleep_Patterns": 80,
+    "Psychotic_Features": 25,
+    "Overall_Risk": 58
+  },
+  "assessment_type": "Bipolar Disorder Screening Tool",
+  "version": "1.0",
+  "disclaimer": "This is a screening tool, not a diagnostic instrument. Seek professional help for diagnosis.",
+  "crisis_resources": {
+    "suicide_prevention_lifeline": "988",
+    "crisis_text_line": "Text HOME to 741741",
+    "emergency": "911"
+  }
+}

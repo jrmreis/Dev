@@ -1,0 +1,354 @@
+# 🚫 .gitignore - Sistema de Triagem Psicológica
+# Configuração abrangente para Node.js + Notion API
+
+# ==============================================================================
+# 📦 Node.js Dependencies
+# ==============================================================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# Dependency directories
+jspm_packages/
+
+# ==============================================================================
+# 🔒 Environment & Secrets
+# ==============================================================================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Notion API keys e secrets
+.notion-key
+secrets/
+*.key
+*.pem
+*.p12
+*.pfx
+
+# Configuration files with secrets
+config/secrets.json
+config/production.json
+
+# ==============================================================================
+# 📝 Logs & Reports
+# ==============================================================================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+.nyc_output/
+
+# Test reports
+reports/
+test-results/
+junit.xml
+coverage.xml
+
+# ==============================================================================
+# 🏗️ Build & Distribution
+# ==============================================================================
+build/
+dist/
+out/
+.next/
+.nuxt/
+.cache/
+.parcel-cache/
+
+# Webpack bundles
+*.bundle.js
+*.bundle.map
+
+# ==============================================================================
+# 🐳 Docker & Container Files
+# ==============================================================================
+.dockerignore
+docker-compose.override.yml
+.docker/
+
+# ==============================================================================
+# ☁️ Cloud & Deploy
+# ==============================================================================
+# Vercel
+.vercel/
+.vercel
+
+# Netlify
+.netlify/
+
+# Railway
+.railway/
+
+# Heroku
+.heroku/
+
+# AWS
+.aws/
+.elasticbeanstalk/
+
+# Google Cloud
+.gcloud/
+gcloud-service-key.json
+
+# ==============================================================================
+# 💾 Databases & Cache
+# ==============================================================================
+# SQLite
+*.sqlite
+*.sqlite3
+*.db
+
+# Redis dumps
+dump.rdb
+
+# MongoDB
+mongod.lock
+
+# Cache files
+.cache/
+.tmp/
+tmp/
+temp/
+
+# ==============================================================================
+# 🧪 Testing
+# ==============================================================================
+# Jest
+jest.config.js.backup
+
+# Cypress
+cypress/videos/
+cypress/screenshots/
+cypress/downloads/
+
+# Playwright
+test-results/
+playwright-report/
+
+# ==============================================================================
+# 🛠️ Development Tools
+# ==============================================================================
+# VS Code
+.vscode/
+!.vscode/settings.json.example
+!.vscode/extensions.json.example
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# ==============================================================================
+# 💻 Operating System Files
+# ==============================================================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ==============================================================================
+# 📊 Analytics & Monitoring
+# ==============================================================================
+# Grafana
+grafana/data/
+
+# Prometheus
+prometheus/data/
+
+# Loki
+loki/data/
+
+# ==============================================================================
+# 🔄 Backup Files
+# ==============================================================================
+*.backup
+*.bak
+*.old
+*.orig
+backup/
+backups/
+
+# ==============================================================================
+# 📱 Mobile Development (se aplicável)
+# ==============================================================================
+# React Native
+.expo/
+.expo-shared/
+
+# ==============================================================================
+# 🧠 Dados Específicos da Aplicação
+# ==============================================================================
+# Arquivos de sessão temporários
+sessions/
+temp-sessions/
+
+# Dados de triagem em desenvolvimento
+dev-data/
+test-data/
+
+# Exports de dados (podem conter informações sensíveis)
+exports/
+*.csv
+*.xlsx
+*.json.export
+
+# Cache de scores calculados
+scores-cache/
+
+# ==============================================================================
+# 📈 Performance & Profiling
+# ==============================================================================
+# Profiling data
+*.cpuprofile
+*.heaprofile
+*.heapsnapshot
+
+# Benchmark results
+benchmark-results/
+
+# ==============================================================================
+# 🔧 Configuration Overrides
+# ==============================================================================
+# Local configuration overrides
+config/local.json
+config/development.local.json
+config/production.local.json
+
+# Personal configuration
+.personal/
+my-config.json
+
+# ==============================================================================
+# 📚 Documentation Build
+# ==============================================================================
+# Generated documentation
+docs/build/
+docs/dist/
+api-docs/
+
+# Storybook
+.storybook/public/
+storybook-static/
+
+# ==============================================================================
+# 🎯 Specific File Patterns
+# ==============================================================================
+# Temporary files
+*~
+*.tmp
+*.temp
+.temporary
+
+# Lock files (include package-lock.json but exclude others)
+!package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Environment template (keep the example)
+!.env.example
+!.env.template
+
+# Keep important configuration examples
+!config/*.example.json
+!config/*.template.json
+!docker-compose.override.yml.example
+
+# ==============================================================================
+# 🔍 IDE & Editor Files
+# ==============================================================================
+# Various editors
+.history/
+.metals/
+.bloop/
+.ammonite/
+
+# ==============================================================================
+# 🚀 Deployment Artifacts
+# ==============================================================================
+# Build artifacts
+*.tgz
+*.tar.gz
+*.zip
+*.rar
+
+# Deployment scripts with secrets
+deploy-prod.sh
+deploy-staging.sh
+
+# ==============================================================================
+# 📊 Analytics & Metrics
+# ==============================================================================
+# Local analytics data
+analytics-data/
+metrics/
+stats/
+
+# User data exports (LGPD compliance)
+user-exports/
+gdpr-exports/
+
+# ==============================================================================
+# 💡 Maintenance
+# ==============================================================================
+# Keep this file clean and organized
+# Group related patterns together
+# Comment sections for clarity
+# Regular review and updates
