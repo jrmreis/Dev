@@ -369,7 +369,7 @@ app.get('/api/questions/:screeningType', async (req, res) => {
   }
 });
 
-// POST Initialize Session - Matching your existing database schema exactly
+// POST Initialize Session - Memory only, no Notion until completion
 app.post('/api/iniciar', async (req, res) => {
   try {
     const { tipo_triagem } = req.body;
@@ -392,7 +392,7 @@ app.post('/api/iniciar', async (req, res) => {
     // Generate session ID matching your existing pattern
     const sessionId = `${tipo_triagem.toUpperCase().slice(0,3)}-${Date.now().toString().slice(-12)}-${Math.random().toString(36).substr(2, 5)}`;
     
-    // Get the correct database ID for this assessment type
+    // Validate database exists for this assessment type
     const databaseId = getDatabaseId(tipo_triagem);
     if (!databaseId) {
       return res.status(400).json({
@@ -401,89 +401,30 @@ app.post('/api/iniciar', async (req, res) => {
       });
     }
 
-    // First, let's retrieve the database schema to see the exact property names
-    try {
-      const databaseSchema = await notion.databases.retrieve({ database_id: databaseId });
-      console.log('📋 Available database properties:');
-      Object.keys(databaseSchema.properties).forEach(propName => {
-        if (propName.startsWith('Subescala_')) {
-          console.log(`   • ${propName}`);
-        }
-      });
-    } catch (error) {
-      console.log('Could not retrieve database schema for property inspection');
-    }
-    
-    try {
-      // Create Notion page with only your existing properties
-      const newPage = await notion.pages.create({
-        parent: { database_id: databaseId },
-        properties: {
-          // Only using properties that definitely exist in your database
-          'title': {
-            title: [{ text: { content: `Sessão ${sessionId}` } }]
-          },
-          'Data_Avaliacao': {
-            date: { start: new Date().toISOString().split('T')[0] }
-          },
-          'ID_Sessao': {
-            rich_text: [{ text: { content: sessionId } }]
-          },
-          'IP_Anonimizado': {
-            rich_text: [{ text: { content: 'ANONIMO' } }]
-          }
-        }
-      });
+    // Store session ONLY in memory - no Notion record yet
+    activeSessions.set(sessionId, {
+      sessionId,
+      tipo_triagem,
+      databaseId, // Store for later use
+      pageId: null, // Will be set when finalizing
+      startTime: Date.now(),
+      responses: {},
+      metadata: questionSet.metadata
+    });
 
-      // Store session in memory
-      activeSessions.set(sessionId, {
+    res.json({
+      success: true,
+      data: {
         sessionId,
         tipo_triagem,
-        pageId: newPage.id,
-        startTime: Date.now(),
-        responses: {},
-        metadata: questionSet.metadata
-      });
+        totalQuestions: questionSet.metadata.totalQuestions,
+        estimatedTime: questionSet.metadata.estimatedTime,
+        scientificBasis: questionSet.metadata.scientificBasis,
+        timestamp: new Date().toISOString()
+      }
+    });
 
-      res.json({
-        success: true,
-        data: {
-          sessionId,
-          tipo_triagem,
-          totalQuestions: questionSet.metadata.totalQuestions,
-          estimatedTime: questionSet.metadata.estimatedTime,
-          scientificBasis: questionSet.metadata.scientificBasis,
-          timestamp: new Date().toISOString()
-        }
-      });
-
-      console.log(`✅ Session ${sessionId} created in Notion page ${newPage.id}`);
-
-    } catch (notionError) {
-      console.warn('⚠️ Notion error, creating session in memory only:', notionError.message);
-      
-      // Fallback: create session without Notion
-      activeSessions.set(sessionId, {
-        sessionId,
-        tipo_triagem,
-        pageId: null,
-        startTime: Date.now(),
-        responses: {},
-        metadata: questionSet.metadata
-      });
-
-      res.json({
-        success: true,
-        data: {
-          sessionId,
-          tipo_triagem,
-          totalQuestions: questionSet.metadata.totalQuestions,
-          estimatedTime: questionSet.metadata.estimatedTime,
-          scientificBasis: questionSet.metadata.scientificBasis,
-          timestamp: new Date().toISOString()
-        }
-      });
-    }
+    console.log(`✅ Session ${sessionId} created in memory only (no Notion record yet)`);
 
   } catch (error) {
     console.error('❌ Error initializing session:', error);
@@ -567,7 +508,7 @@ function generateRecommendations(totalScore, maxScore, subscaleScores, screening
   return recommendations;
 }
 
-// POST Finalize Session - Update your existing Notion records with all subscales
+// POST Finalize Session - CREATE Notion record with complete data
 app.post('/api/finalizar/:sessionId', async (req, res) => {
   try {
     const { sessionId } = req.params;
@@ -633,129 +574,135 @@ app.post('/api/finalizar/:sessionId', async (req, res) => {
       timestamp: new Date().toISOString()
     };
 
-    // Update Notion page with comprehensive results using your exact property names
-    if (session.pageId) {
-      try {
-        // Prepare properties object - use correct property types and names
-        const updateProperties = {
-          'Duracao_Sessao': {
-            number: tempo_resposta
-          }
+    // CREATE Notion page with complete results (not update)
+    let createdPageId = null;
+    try {
+      // Prepare complete properties object
+      const createProperties = {
+        // Basic session info
+        'title': {
+          title: [{ text: { content: `Sessão ${sessionId}` } }]
+        },
+        'Data_Avaliacao': {
+          date: { start: new Date().toISOString().split('T')[0] }
+        },
+        'ID_Sessao': {
+          rich_text: [{ text: { content: sessionId } }]
+        },
+        'IP_Anonimizado': {
+          rich_text: [{ text: { content: 'ANONIMO' } }]
+        },
+        'Duracao_Sessao': {
+          number: tempo_resposta
+        },
+        'Status_Sessao': {
+          select: { name: 'Finalizada' }
+        },
+        'Pontuacao_Geral': {
+          number: totalScore
+        },
+        'Nivel_Risco': {
+          select: { name: riskLevel }
+        },
+        'Recomendacoes': {
+          rich_text: [{ text: { content: recommendations.slice(0, 3).join('; ') } }]
+        }
+      };
+
+      // Add subscale scores using the corrected mapping
+      if (subscaleScores && tipo_triagem === 'anxiety') {
+        const subscaleMapping = {
+          'AtaquesPanico': 'Subescala_AtaquesPanico',
+          'DificuldadeConce': 'Subescala_DificuldadeConcentracao',  // ✅ FIXED
+          'DisturbioSono': 'Subescala_DisturbioSono',
+          'EvitacaoSocial': 'Subescala_EvitacaoSocial',
+          'Fadiga': 'Subescala_Fadiga',
+          'FuncionamentoDi': 'Subescala_FuncionamentoDiario',       // ✅ FIXED
+          'Inquietacao': 'Subescala_Inquietacao',
+          'Irritabilidade': 'Subescala_Irritabilidade',
+          'PreocupacaoExce': 'Subescala_PreocupacaoExcessiva',      // ✅ FIXED
+          'TensaoMuscular': 'Subescala_TensaoMuscular'
         };
 
-        // Add properties with correct types - Status_Sessao and Nivel_Risco are SELECT properties
-        try {
-          updateProperties['Status_Sessao'] = {
-            select: { name: 'Finalizada' }
-          };
-          updateProperties['Pontuacao_Geral'] = {
-            number: totalScore
-          };
-          updateProperties['Nivel_Risco'] = {
-            select: { name: riskLevel }
-          };
-          updateProperties['Recomendacoes'] = {
-            rich_text: [{ text: { content: recommendations.slice(0, 3).join('; ') } }]
-          };
-        } catch (error) {
-          console.log('Some properties may not exist, continuing with basic update...');
-        }
-
-        // Add subscale scores using the exact property names from your Notion database
-        if (subscaleScores && tipo_triagem === 'anxiety') {
-          const subscaleMapping = {
-            'AtaquesPanico': 'Subescala_AtaquesPanico',
-            'DificuldadeConce': 'Subescala_DificuldadeConce',  // This one appears to have the full name
-            'DisturbioSono': 'Subescala_DisturbioSono',
-            'EvitacaoSocial': 'Subescala_EvitacaoSocial',
-            'Fadiga': 'Subescala_Fadiga',
-            'FuncionamentoDi': 'Subescala_FuncionamentoDi',   // This one appears to have the full name
-            'Inquietacao': 'Subescala_Inquietacao',
-            'Irritabilidade': 'Subescala_Irritabilidade',
-            'PreocupacaoExce': 'Subescala_PreocupacaoExce',   // This one appears to have the full name
-            'TensaoMuscular': 'Subescala_TensaoMuscular'
-          };
-
-          Object.entries(subscaleScores).forEach(([subscaleId, score]) => {
-            const notionPropertyName = subscaleMapping[subscaleId];
-            if (notionPropertyName) {
-              // Try to update the property, skip if it doesn't exist
-              try {
-                updateProperties[notionPropertyName] = { number: score };
-                console.log(`✅ Added subscale ${subscaleId}: ${score} to property ${notionPropertyName}`);
-              } catch (error) {
-                console.log(`❌ Skipping subscale ${subscaleId} - property ${notionPropertyName} may not exist`);
-              }
-            }
-          });
-        }
-
-        await notion.pages.update({
-          page_id: session.pageId,
-          properties: updateProperties
+        Object.entries(subscaleScores).forEach(([subscaleId, score]) => {
+          const notionPropertyName = subscaleMapping[subscaleId];
+          if (notionPropertyName) {
+            createProperties[notionPropertyName] = { number: score };
+            console.log(`✅ Added subscale ${subscaleId}: ${score} to property ${notionPropertyName}`);
+          }
         });
+      }
 
-        // Add detailed results as page content
+      // CREATE the Notion page with all data at once
+      const newPage = await notion.pages.create({
+        parent: { database_id: session.databaseId },
+        properties: createProperties
+      });
+
+      createdPageId = newPage.id;
+
+      // Add detailed results as page content
+      await notion.blocks.children.append({
+        block_id: createdPageId,
+        children: [
+          {
+            object: 'block',
+            type: 'heading_2',
+            heading_2: {
+              rich_text: [{ text: { content: 'Resultado Detalhado da Triagem' } }]
+            }
+          },
+          {
+            object: 'block',
+            type: 'paragraph',
+            paragraph: {
+              rich_text: [
+                { text: { content: `Pontuação Total: ${totalScore}/${maxScore} (${percentage}%)\n` } },
+                { text: { content: `Nível de Risco: ${riskLevel}\n` } },
+                { text: { content: `Interpretação: ${interpretation}\n\n` } },
+                { text: { content: `Base Científica: ${questionSet.metadata.scientificBasis}\n\n` } },
+                { text: { content: `Recomendações:\n${recommendations.map(r => `• ${r}`).join('\n')}` } }
+              ]
+            }
+          }
+        ]
+      });
+
+      // Add subscale breakdown if available
+      if (subscaleScores && Object.keys(subscaleScores).length > 0) {
+        const subscaleText = Object.entries(subscaleScores)
+          .map(([id, score]) => {
+            const subscale = questionSet.subscales?.find(s => s.id === id);
+            return `${subscale?.name || id}: ${score}`;
+          })
+          .join('\n');
+
         await notion.blocks.children.append({
-          block_id: session.pageId,
+          block_id: createdPageId,
           children: [
             {
               object: 'block',
-              type: 'heading_2',
-              heading_2: {
-                rich_text: [{ text: { content: 'Resultado Detalhado da Triagem' } }]
+              type: 'heading_3',
+              heading_3: {
+                rich_text: [{ text: { content: 'Análise por Subescalas' } }]
               }
             },
             {
               object: 'block',
               type: 'paragraph',
               paragraph: {
-                rich_text: [
-                  { text: { content: `Pontuação Total: ${totalScore}/${maxScore} (${percentage}%)\n` } },
-                  { text: { content: `Nível de Risco: ${riskLevel}\n` } },
-                  { text: { content: `Interpretação: ${interpretation}\n\n` } },
-                  { text: { content: `Base Científica: ${questionSet.metadata.scientificBasis}\n\n` } },
-                  { text: { content: `Recomendações:\n${recommendations.map(r => `• ${r}`).join('\n')}` } }
-                ]
+                rich_text: [{ text: { content: subscaleText } }]
               }
             }
           ]
         });
-
-        // Add subscale breakdown if available
-        if (subscaleScores && Object.keys(subscaleScores).length > 0) {
-          const subscaleText = Object.entries(subscaleScores)
-            .map(([id, score]) => {
-              const subscale = questionSet.subscales?.find(s => s.id === id);
-              return `${subscale?.name || id}: ${score}`;
-            })
-            .join('\n');
-
-          await notion.blocks.children.append({
-            block_id: session.pageId,
-            children: [
-              {
-                object: 'block',
-                type: 'heading_3',
-                heading_3: {
-                  rich_text: [{ text: { content: 'Análise por Subescalas' } }]
-                }
-              },
-              {
-                object: 'block',
-                type: 'paragraph',
-                paragraph: {
-                  rich_text: [{ text: { content: subscaleText } }]
-                }
-              }
-            ]
-          });
-        }
-
-        console.log(`✅ Notion page ${session.pageId} updated with comprehensive results`);
-      } catch (notionError) {
-        console.warn('⚠️ Failed to update Notion page:', notionError.message);
       }
+
+      console.log(`✅ Session ${sessionId} - Complete Notion record created: ${createdPageId}`);
+      
+    } catch (notionError) {
+      console.warn('⚠️ Failed to create Notion record:', notionError.message);
+      // Continue without Notion - session is still completed in memory
     }
 
     // Remove from active sessions
@@ -764,7 +711,10 @@ app.post('/api/finalizar/:sessionId', async (req, res) => {
     res.json({
       success: true,
       data: {
-        resultado
+        resultado: {
+          ...resultado,
+          notionPageId: createdPageId
+        }
       }
     });
 
